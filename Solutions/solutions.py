@@ -67,16 +67,43 @@ codon_map = {
         "GGG": "G",
     }
 
+amino_acid_weight_map = {
+    "A":71.03711,
+    "C":103.00919,
+    "D":115.02694,
+    "E":129.04259,
+    "F":147.06841,
+    "G":57.02146,
+    "H":137.05891,
+    "I":113.08406,
+    "K":128.09496,
+    "L":113.08406,
+    "M":131.04049,
+    "N":114.04293,
+    "P":97.05276,
+    "Q":128.05858,
+    "R":156.10111,
+    "S":87.03203,
+    "T":101.04768,
+    "V":99.06841,
+    "W":186.07931,
+    "Y":163.06333,
 
-def immortal_rabbit_pop_calc(months, rabbits_per_litter):
+}
+
+def immortal_rabbit_pop(months, rabbits_per_litter):
     pop, pop_past = 1, 1
     for _ in np.arange(months - 2):
         pop, pop_past = pop_past * rabbits_per_litter + pop, pop
     return pop
 
-def mortal_rabbit_pop_calc(months, life_span):
-    pass
-
+def mortal_rabbit_pop(months, life_span):
+    pop = [0 for _ in range(life_span)]
+    pop[-1] = 1
+    for month in range(2, months+1):
+        pop.append(sum(pop[:-1]))
+        pop = pop[1:]
+    return sum(pop)
 
 def dominant_allele_by_population(homo_pos, het, homo_neg):
     tot = homo_neg + homo_pos + het
@@ -107,3 +134,16 @@ def codon_translation(rna_string):
     for codon in codons[:-1]:
         amino_acid_string += codon_map[codon]
     return amino_acid_string
+
+def codon_combinations(rna_string):
+    reverse_codon_count = dict()
+    for acid in codon_map.values():
+        if acid in reverse_codon_count:
+            reverse_codon_count[acid] += 1
+        else:
+            reverse_codon_count[acid] = 1
+    total = 1
+    for char in rna_string:
+        total *= reverse_codon_count[char]
+    total *= reverse_codon_count['Stop']
+    return total % 1_000_000
