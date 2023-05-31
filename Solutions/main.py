@@ -1,16 +1,12 @@
 import solutions as sols
 import dna
 import numpy as np
+import itertools
+
+with open('Inputs/rosalind_tree.txt') as input:
+    lines = input.readlines()
+    print(int(lines[0])-len(lines))
 
 
-
-lst = dna.Fasta_List_Ops('Inputs/rosalind_cons.txt')
-print(lst.consensus_string())
-matrix = lst.profile_matrix()
-
-for i, row in enumerate(matrix):
-    row_str = sols.int_to_nucleotide[i]+":"
-    for num in row: 
-        row_str += " " + str(num)
-    print(row_str)
-
+with open('Output/out.txt', 'w') as f:
+    pass

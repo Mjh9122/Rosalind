@@ -1,5 +1,9 @@
 import solutions as sols
 import numpy as np
+import re
+import itertools
+
+from tqdm import tqdm
 
 class Fasta_dna:
     def __init__(self, lines):
@@ -47,10 +51,21 @@ class Fasta_dna:
     def motif_locations(self, substring):
         locations = []
         length = len(substring)
-        for index in range(len(self.dna_string)-length):
+        for index in range(len(self.dna_string)):
             if self.dna_string[index:index+length] == substring:
                 locations.append(index + 1)
         return locations
+    
+    def kmer_compostion(self, k):
+        def string_from_list(lst):
+            string = ""
+            for char in lst:
+                string += char
+            return string
+        alphabet = ["A", "C", "G", "T"]
+        perms = list(itertools.product(alphabet, repeat=k))
+        strs = [string_from_list(p) for p in perms]
+        return [len(self.motif_locations(s)) for s in strs]
     
     def hamming_dist(self, comparison_string: str) -> int:
         if len(self.dna_string) != len(comparison_string):
@@ -77,6 +92,22 @@ class Fasta_dna:
                 if substring == sols.reverse_comp_string(substring) and i + length <= len(self.dna_string):
                     loc_lengths.append((i+1, length))
         return loc_lengths
+    
+    def open_reading_frames(self):
+        reverse_comp = self.reverse_compliment()
+        strs = [self.dna_string, self.dna_string[1:], self.dna_string[2:], reverse_comp, reverse_comp[1:], reverse_comp[2:]]
+        rna_strs = [sols.to_rna(s) for s in strs]
+        codons_strs = [sols.codon_translation(rna) for rna in rna_strs]
+        valid_start_strings = []
+        for codon_str in codons_strs:
+            try:
+                start_indeces = [m.start() for m in re.finditer("M", codon_str)]
+                for i in start_indeces:
+                    valid_start_strings.append(codon_str[i:])
+            except:
+                continue
+        valid_proteins = [cod[:cod.index('Stop')] for cod in valid_start_strings if 'Stop' in cod]
+        return set(valid_proteins)
 
 
 class Fasta_List_Ops:

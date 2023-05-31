@@ -135,7 +135,10 @@ def codon_translation(rna_string):
     amino_acid_string = ""
     codons = [rna_string[i:i+3] for i in range(0,len(rna_string),3)]
     for codon in codons[:-1]:
-        amino_acid_string += codon_map[codon]
+        try:
+            amino_acid_string += codon_map[codon]
+        except:
+            return ""
     return amino_acid_string
 
 def codon_combinations(rna_string):
@@ -164,3 +167,6 @@ def reverse_comp_string(dna_string):
         for char in rev:
             rev_comp += molecule_map[char]
         return rev_comp
+
+def to_rna(dna_string):
+        return dna_string.replace('T', 'U')
