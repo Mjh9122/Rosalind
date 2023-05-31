@@ -1,5 +1,9 @@
 import numpy as np
 
+int_to_nucleotide = {0:'A', 1:"C", 2:"G", 3:'T'}
+nucleotide_to_int = {'A':0, "C":1, "G":2, 'T':3}
+
+
 codon_map = {
         "UUU": "F",
         "CUU": "L",
@@ -88,7 +92,6 @@ amino_acid_weight_map = {
     "V":99.06841,
     "W":186.07931,
     "Y":163.06333,
-
 }
 
 def immortal_rabbit_pop(months, rabbits_per_litter):
@@ -147,3 +150,17 @@ def codon_combinations(rna_string):
         total *= reverse_codon_count[char]
     total *= reverse_codon_count['Stop']
     return total % 1_000_000
+
+def protein_mass(protein_string):
+    mass = 0
+    for char in protein_string:
+        mass += amino_acid_weight_map[char]
+    return mass
+
+def reverse_comp_string(dna_string):
+        rev = dna_string[::-1]
+        molecule_map = {"A":"T", "T":"A","C":"G","G":"C"}
+        rev_comp = ""
+        for char in rev:
+            rev_comp += molecule_map[char]
+        return rev_comp
