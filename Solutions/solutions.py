@@ -94,6 +94,36 @@ amino_acid_weight_map = {
     "Y":163.06333,
 }
 
+def blossom_map():
+    with open('Solutions/blossum62.txt') as f:
+        lines = f.readlines()
+        matrix = [line.strip().split() for line in lines]
+        top_labels = matrix[0]
+        matrix = matrix[1:]
+        side_labels = [matrix[i][0] for i in range(len(matrix))]        
+        matrix = [matrix[i][1:] for i in range(len(matrix))]
+        blossom_map = dict()
+        for i, top in enumerate(top_labels):
+            for j, side in enumerate(side_labels):
+                blossom_map[top+side] = int(matrix[j][i])
+
+        return blossom_map
+
+def pam_map():
+    with open('Solutions/pam50.txt') as f:
+        lines = f.readlines()
+        matrix = [line.strip().split() for line in lines]
+        top_labels = matrix[0]
+        matrix = matrix[1:]
+        side_labels = [matrix[i][0] for i in range(len(matrix))]        
+        matrix = [matrix[i][1:] for i in range(len(matrix))]
+        blossom_map = dict()
+        for i, top in enumerate(top_labels):
+            for j, side in enumerate(side_labels):
+                blossom_map[top+side] = int(matrix[j][i])
+
+        return blossom_map
+
 def immortal_rabbit_pop(months, rabbits_per_litter):
     pop, pop_past = 1, 1
     for _ in np.arange(months - 2):
@@ -170,3 +200,15 @@ def reverse_comp_string(dna_string):
 
 def to_rna(dna_string):
         return dna_string.replace('T', 'U')
+
+def edit_distance_weighted(string1, string2, map_func):
+        mapper = map_func()
+        rows = string1
+        cols = string2
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                dist[r][c] = max(dist[r-1][c] - 5, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - 5, 0)
+        return dist[-1][-1]
+
+

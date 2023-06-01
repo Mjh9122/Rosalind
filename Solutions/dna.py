@@ -5,7 +5,7 @@ import itertools
 
 from tqdm import tqdm
 
-class Fasta_dna:
+class Fasta:
     def __init__(self, lines):
         assert lines[0][0] == '>'
         self.id = lines[0][1:].strip()
@@ -108,6 +108,97 @@ class Fasta_dna:
                 continue
         valid_proteins = [cod[:cod.index('Stop')] for cod in valid_start_strings if 'Stop' in cod]
         return set(valid_proteins)
+    
+    def subsequence_indices(self, sequence_ob):
+        indices = []
+        cur = 0
+        for i, char in enumerate(self.dna_string):
+            try:
+                if char == sequence_ob.dna_string[cur]:
+                    cur += 1
+                    indices.append(i)
+            except:
+                pass
+        return indices
+    
+    def common_subsequence(self, comparison_ob):
+        rows = self.dna_string
+        cols = comparison_ob.dna_string
+        longest_substr = [["" for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    longest_substr[r][c] = longest_substr[r-1][c-1] + rows[r-1]
+                elif len(longest_substr[r][c-1]) > len(longest_substr[r-1][c]):
+                    longest_substr[r][c] = longest_substr[r][c-1]
+                else: 
+                    longest_substr[r][c] = longest_substr[r-1][c]
+        return longest_substr[-1][-1]
+
+    def edit_distance(self, comparison_ob):
+        rows = self.dna_string
+        cols = comparison_ob.dna_string
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(len(rows) + 1):
+            dist[i][0] = i
+        for j in range(len(cols)+1):
+            dist[0][j] = j
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    dist[r][c] = dist[r-1][c-1]
+                else:
+                    dist[r][c] = min(dist[r-1][c], dist[r-1][c-1], dist[r][c-1]) + 1
+        return dist[-1][-1]
+    
+    def edit_dist_allignment(self, comparison_ob):
+        rows = self.dna_string
+        cols = comparison_ob.dna_string
+        # (ROW, COL, NUM)
+        dist = [[("", "", 0) for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(1, len(rows) + 1):
+            dist[i][0] = (dist[i-1][0][0]+rows[i-1], dist[i-1][0][1]+"-", i)
+        for j in range(1, len(cols)+1):
+            dist[0][j] = (dist[0][j-1][0]+"-", dist[0][j-1][1]+cols[j-1], j)
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    dist[r][c] = (dist[r-1][c-1][0] + rows[r-1], dist[r-1][c-1][1] + rows[r-1], dist[r-1][c-1][2])
+                elif dist[r-1][c-1][2] <= dist[r-1][c][2] and dist[r-1][c-1][2] <= dist[r][c-1][2]:
+                    dist[r][c] = (dist[r-1][c-1][0] + rows[r-1], dist[r-1][c-1][1] + cols[c-1], dist[r-1][c-1][2]+1)
+                elif dist[r-1][c][2] <= dist[r][c-1][2]:
+                    if '-' in dist[r-1][c][0] and dist[r-1][c][0][-1] == '-':
+                        dist[r][c] = (dist[r-1][c][0][:-1] + rows[r-1], dist[r-1][c][1], dist[r-1][c][2])
+                    else:
+                        dist[r][c] = (dist[r-1][c][0] + rows[r-1], dist[r-1][c][1] + "-", dist[r-1][c][2]+1)
+                else:
+                    if '-' in dist[r][c-1][0] and dist[r][c-1][1][-1] == '-':
+                        dist[r][c] = (dist[r][c-1][0], dist[r][c-1][1][:-1]+cols[c-1], dist[r][c-1][2])
+                    else:
+                        dist[r][c] = (dist[r][c-1][0] + "-", dist[r][c-1][1] + cols[c-1], dist[r][c-1][2]+1)
+        return dist[-1][-1]
+    
+    def edit_distance_weighted(self, comparison_ob, map_func):
+        mapper = map_func()
+        rows = self.dna_string
+        cols = comparison_ob.dna_string
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(len(rows) + 1):
+            dist[i][0] = i * -5
+        for j in range(len(cols)+1):
+            dist[0][j] = j * -5
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    dist[r][c] = dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]]
+                else:
+                    dist[r][c] = max(dist[r-1][c] - 5, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - 5)
+        return dist[-1][-1]
+    
+    def optimal_local_alignment(self, comparison_ob, map_func, gap_pen):
+        pass
+        
+    
 
 
 class Fasta_List_Ops:
@@ -120,10 +211,10 @@ class Fasta_List_Ops:
                 if line[0] == '>':
                     end = index
                     if start != end:
-                        self.dna_list.append(Fasta_dna(lines[start:end]))
+                        self.dna_list.append(Fasta(lines[start:end]))
                     start = index
             end = len(lines)
-            self.dna_list.append(Fasta_dna(lines[start:end]))
+            self.dna_list.append(Fasta(lines[start:end]))
 
     def largest_substring(self):
         srted = sorted(self.dna_list, key=lambda x: len(x.dna_string))
