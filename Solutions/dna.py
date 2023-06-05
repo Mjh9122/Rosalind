@@ -2,6 +2,7 @@ import solutions as sols
 import numpy as np
 import re
 import itertools
+import sys
 
 from tqdm import tqdm
 
@@ -135,6 +136,21 @@ class Fasta:
                     longest_substr[r][c] = longest_substr[r-1][c]
         return longest_substr[-1][-1]
 
+    def transition_transversion_ratio(self, comparison):
+        source = self.dna_string
+        target = comparison.dna_string
+        assert len(source) == len(target)
+        transitions = 0
+        transversions = 0
+        for i, char1 in enumerate(source):
+            if char1 != (char2 := target[i]):
+                if char1 in ('A', "G") and char2 in ('A', 'G') or \
+                char1 in ('C', 'T') and char2 in ('C', 'T'):
+                    transitions += 1
+                else:
+                    transversions += 1
+        return transitions/transversions
+
     def edit_distance(self, comparison_ob):
         rows = self.dna_string
         cols = comparison_ob.dna_string
@@ -178,8 +194,7 @@ class Fasta:
                         dist[r][c] = (dist[r][c-1][0] + "-", dist[r][c-1][1] + cols[c-1], dist[r][c-1][2]+1)
         return dist[-1][-1]
     
-    def edit_distance_weighted(self, comparison_ob, map_func):
-        mapper = map_func()
+    def edit_distance_weighted(self, comparison_ob, mapper):
         rows = self.dna_string
         cols = comparison_ob.dna_string
         dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
@@ -195,8 +210,117 @@ class Fasta:
                     dist[r][c] = max(dist[r-1][c] - 5, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - 5)
         return dist[-1][-1]
     
-    def optimal_local_alignment(self, comparison_ob, map_func, gap_pen):
-        pass
+    def optimal_local_alignment(self, comparison_ob, mapper, gap_pen):
+        sys.setrecursionlimit(10**6)
+        rows = self.dna_string
+        cols = comparison_ob.dna_string
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        traceback = [[[(0, 0)] for _ in range(len(cols) + 1)] for _ in range(len(rows)+1)]
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                next_cell_val = max(dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r-1][c] - gap_pen, dist[r][c-1] - gap_pen, 0)
+                dist[r][c] = next_cell_val
+                traceback[r][c] = []
+                if dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]] == next_cell_val:
+                    traceback[r][c].append((-1, -1))
+                if dist[r-1][c] - gap_pen == next_cell_val:
+                    traceback[r][c].append((-1, 0))
+                if dist[r][c-1] - gap_pen == next_cell_val:
+                    traceback[r][c].append((0, -1))
+                if 0 == next_cell_val:
+                    traceback[r][c].append((0, 0))
+
+        max_score = 0
+        max_loc = (0, 0)
+        for row_index, row in enumerate(dist):
+            if max(row) > max_score:
+                max_row = row_index
+                max_col = row.index(max(row))
+                max_loc = max_row, max_col
+                max_score = max(row)
+
+        end_row, end_col = max_loc
+
+        def find_roots(row, col):
+            roots = set()
+            if dist[row][col] == 0:
+                roots.add((row, col))
+                return roots
+            else:
+                for direction in traceback[row][col]:
+                    return roots.union(find_roots(row + direction[0], col + direction[1]))
+
+        starts = find_roots(end_row, end_col)
+        for (start_row, start_col) in list(starts):
+            return max_score, rows[start_row:end_row], cols[start_col:end_col]
+
+        return max_score, "failed"
+    
+    def fitting_alignment(self, motif_ob, mapper, gap_pen):
+        sys.setrecursionlimit(10**6)
+        rows = motif_ob.dna_string
+        cols = self.dna_string
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(len(rows)+1):
+            dist[i][0] = i * -gap_pen
+        traceback = [[[(0, 0)] for _ in range(len(cols) + 1)] for _ in range(len(rows)+1)]
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                next_cell_val = max(dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r-1][c] - gap_pen, dist[r][c-1] - gap_pen)
+                dist[r][c] = next_cell_val
+                traceback[r][c] = []
+                if dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]] == next_cell_val:
+                    traceback[r][c].append((-1, -1))
+                if dist[r-1][c] - gap_pen == next_cell_val:
+                    traceback[r][c].append((-1, 0))
+                if dist[r][c-1] - gap_pen == next_cell_val:
+                    traceback[r][c].append((0, -1))
+
+        max_score = max(dist[-1])
+        max_loc = len(rows), dist[-1].index(max(dist[-1]))
+
+        end_row, end_col = max_loc
+
+        def find_roots(row, col):
+            roots = set()
+            if row == 0:
+                roots.add((row, col))
+                return roots
+            else:
+                for direction in traceback[row][col]:
+                    return roots.union(find_roots(row + direction[0], col + direction[1]))
+
+        starts = find_roots(end_row, end_col)
+        for (start_row, start_col) in list(starts):
+            col_string = cols[start_col:end_col]
+
+        ###########################################
+        cols = col_string
+        # (ROW, COL, NUM)
+        dist = [[("", "", 0) for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(1, len(rows) + 1):
+            dist[i][0] = (dist[i-1][0][0]+rows[i-1], dist[i-1][0][1]+"-", -i)
+        for j in range(1, len(cols)+1):
+            dist[0][j] = (dist[0][j-1][0]+"-", dist[0][j-1][1]+cols[j-1], -j)
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    dist[r][c] = (dist[r-1][c-1][0] + rows[r-1], dist[r-1][c-1][1] + rows[r-1], dist[r-1][c-1][2]+1)
+                elif dist[r-1][c-1][2] >= dist[r-1][c][2] and dist[r-1][c-1][2] >= dist[r][c-1][2]:
+                    dist[r][c] = (dist[r-1][c-1][0] + rows[r-1], dist[r-1][c-1][1] + cols[c-1], dist[r-1][c-1][2]-1)
+                elif dist[r-1][c][2] >= dist[r][c-1][2]:
+                    if '-' in dist[r-1][c][0] and dist[r-1][c][0][-1] == '-':
+                        dist[r][c] = (dist[r-1][c][0][:-1] + rows[r-1], dist[r-1][c][1], dist[r-1][c][2])
+                    else:
+                        dist[r][c] = (dist[r-1][c][0] + rows[r-1], dist[r-1][c][1] + "-", dist[r-1][c][2]-1)
+                else:
+                    if '-' in dist[r][c-1][0] and dist[r][c-1][1][-1] == '-':
+                        dist[r][c] = (dist[r][c-1][0], dist[r][c-1][1][:-1]+cols[c-1], dist[r][c-1][2])
+                    else:
+                        dist[r][c] = (dist[r][c-1][0] + "-", dist[r][c-1][1] + cols[c-1], dist[r][c-1][2]-1)
+        ##########################################
+
+        return dist[-1][-1]
         
     
 

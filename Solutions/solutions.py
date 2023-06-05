@@ -123,6 +123,22 @@ def pam_map():
                 blossom_map[top+side] = int(matrix[j][i])
 
         return blossom_map
+    
+def mismatch_map(match_score, missmatch_score):
+    with open('Solutions/blossum62.txt') as f:
+        lines = f.readlines()
+        matrix = [line.strip().split() for line in lines]
+        top_labels = matrix[0]
+        side_labels = [matrix[i][0] for i in range(len(matrix))]        
+        mismatch_map = dict()
+        for i, top in enumerate(top_labels):
+            for j, side in enumerate(side_labels):
+                if top == side:
+                    mismatch_map[top+side] = 1
+                else:
+                    mismatch_map[top+side] = -1
+        return mismatch_map
+
 
 def immortal_rabbit_pop(months, rabbits_per_litter):
     pop, pop_past = 1, 1
@@ -201,14 +217,29 @@ def reverse_comp_string(dna_string):
 def to_rna(dna_string):
         return dna_string.replace('T', 'U')
 
-def edit_distance_weighted(string1, string2, map_func):
+def edit_distance_weighted(string1, string2, map_func, gap_pen):
         mapper = map_func()
         rows = string1
         cols = string2
         dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
         for r in range(1, len(rows)+1):
             for c in range(1, len(cols)+1):
-                dist[r][c] = max(dist[r-1][c] - 5, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - 5, 0)
+                dist[r][c] = max(dist[r-1][c] - gap_pen, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - gap_pen, 0)
         return dist[-1][-1]
 
+def edit_distance(dna_string1, dna_string2):
+        rows = dna_string1
+        cols = dna_string2
+        dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
+        for i in range(len(rows) + 1):
+            dist[i][0] = i
+        for j in range(len(cols)+1):
+            dist[0][j] = j
+        for r in range(1, len(rows)+1):
+            for c in range(1, len(cols)+1):
+                if rows[r-1] == cols[c-1]:
+                    dist[r][c] = dist[r-1][c-1]
+                else:
+                    dist[r][c] = min(dist[r-1][c], dist[r-1][c-1], dist[r][c-1]) + 1
+        return dist[-1][-1]
 

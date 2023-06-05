@@ -3,6 +3,9 @@ import dna
 import numpy as np
 import itertools
 
-lst = dna.Fasta_List_Ops('Inputs/tests.txt').dna_list
-for item in lst[0].optimal_local_alignment(lst[1], sols.pam_map, 5):
-    print(item)
+from tqdm import tqdm
+
+
+lst = dna.Fasta_List_Ops('Inputs/rosalind_tran.txt').dna_list
+print(lst[0].transition_transversion_ratio(lst[1]))
+    
