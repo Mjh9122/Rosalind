@@ -4,6 +4,7 @@ import numpy as np
 import math
 import itertools
 import solutions as sols
+import re
 
 from matplotlib import pyplot as plt
 from tqdm import tqdm
