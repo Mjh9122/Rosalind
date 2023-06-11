@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import math
 import itertools
-import solutions as sols
+import Solutions as sols
 import sys
 
 from matplotlib import pyplot as plt
@@ -108,7 +108,6 @@ class Fasta():
                 else: 
                     longest_substr[r][c] = longest_substr[r-1][c]
         return longest_substr[-1][-1]
-    
 
     def edit_distance(self, comparison_ob):
         """Finds the minimum edit distance between this and one other Fasta Object. 
@@ -134,7 +133,6 @@ class Fasta():
                 else:
                     dist[r][c] = min(dist[r-1][c], dist[r-1][c-1], dist[r][c-1]) + 1
         return dist[-1][-1]
-    
     
     def edit_dist_alignment(self, comparison_ob):
         """Returns the minimum edit distance and alignment of two strings
@@ -174,8 +172,6 @@ class Fasta():
                         dist[r][c] = (dist[r][c-1][0] + "-", dist[r][c-1][1] + cols[c-1], dist[r][c-1][2]+1)
         return dist[-1][-1]
     
-
-   
     def optimal_local_alignment(self, comparison_ob, mapper, gap_pen):
         """Finds the optimal local alignment of two strings, as defined by the mapping passed into the function
 

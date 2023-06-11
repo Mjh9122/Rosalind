@@ -2,14 +2,37 @@ import networkx as nx
 import numpy as np
 import math
 import itertools
-import Fasta
+from Fasta import Fasta
 import Solutions as sols
 
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
-class Fasta_protein(Fasta):
+amino_acid_weight_map = {
+    "A":71.03711,
+    "C":103.00919,
+    "D":115.02694,
+    "E":129.04259,
+    "F":147.06841,
+    "G":57.02146,
+    "H":137.05891,
+    "I":113.08406,
+    "K":128.09496,
+    "L":113.08406,
+    "M":131.04049,
+    "N":114.04293,
+    "P":97.05276,
+    "Q":128.05858,
+    "R":156.10111,
+    "S":87.03203,
+    "T":101.04768,
+    "V":99.06841,
+    "W":186.07931,
+    "Y":163.06333,
+}
+
+class Protein(Fasta):
     def __init__(self, lines):
         super().__init__(lines)
 
@@ -29,3 +52,9 @@ class Fasta_protein(Fasta):
                 else:
                     dist[r][c] = max(dist[r-1][c] - 5, dist[r-1][c-1] + mapper[rows[r-1]+cols[c-1]], dist[r][c-1] - 5)
         return dist[-1][-1]
+    
+    def protein_mass(self):
+        mass = 0
+        for char in self.string:
+            mass += amino_acid_weight_map[char]
+        return mass

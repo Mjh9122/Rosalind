@@ -1,16 +1,17 @@
-import Fasta
 import networkx as nx
 import numpy as np
 import math
 import itertools
-import solutions as sols
+import Solutions as sols
 import re
+
+from Fasta import Fasta
 
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 
-class Fasta_dna(Fasta):
+class Dna(Fasta):
     """Class representing a DNA string in Fasta format
 
     Args:
