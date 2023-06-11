@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import math
 import itertools
-import solutions as sols
+import Solutions as sols
 
 from matplotlib import pyplot as plt
 from tqdm import tqdm
