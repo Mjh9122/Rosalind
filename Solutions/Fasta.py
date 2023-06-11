@@ -254,8 +254,8 @@ class Fasta():
             int: maximum alinement score of the motif 
         """
         sys.setrecursionlimit(10**6)
-        rows = motif_ob.dna_string
-        cols = self.dna_string
+        rows = motif_ob.string
+        cols = self.string
         dist = [[0 for _ in range(len(cols)+1)] for _ in range(len(rows)+1)]
         for i in range(len(rows)+1):
             dist[i][0] = i * -gap_pen
