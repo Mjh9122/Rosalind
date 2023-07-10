@@ -1,4 +1,4 @@
-from Fasta import Fasta
+from Fasta_lib.Fasta import Fasta
 import networkx as nx
 import numpy as np
 import math
@@ -79,6 +79,24 @@ codon_map = {
 class Rna(Fasta):
     def __init__(self, lines):
         super().__init__(lines)
+
+    def count_acgu(self):
+        """Counts the appearance of each letter in the DNA string
+
+        Returns:
+            tuple: (num of As, num of Cs, num of Gs, num of Ts)
+        """
+        acgt = [0, 0, 0, 0]
+        for char in self.string:
+            if char in {"A", 'a'}:
+                acgt[0] += 1
+            elif char in {'C', 'c'}:
+                acgt[1] += 1
+            elif char in {'G', 'g'}:
+                acgt[2] += 1
+            elif char in {'U', 'u'}:
+                acgt[3] += 1
+        return acgt[0], acgt[1], acgt[2], acgt[3]
     
     def to_protein_string(self):
         amino_acid_string = ""
