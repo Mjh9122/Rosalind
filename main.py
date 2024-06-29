@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from Fasta_lib.Rna import Rna
 
-with open('Inputs/rosalind_mmch(1).txt') as f:
+with open('Inputs/test.txt') as f:
     lines = f.readlines()
     rna_string = Rna(lines)
     ACGU = rna_string.count_acgu()

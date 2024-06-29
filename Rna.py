@@ -1,4 +1,4 @@
-from Fasta_lib.Fasta import Fasta
+from Fasta import Fasta
 import networkx as nx
 import numpy as np
 import math
@@ -120,3 +120,7 @@ class Rna(Fasta):
             total *= reverse_codon_count[char]
         total *= reverse_codon_count['Stop']
         return total % 1_000_000
+    
+    def num_max_matchings(self):
+        ACGU = self.count_acgu()
+        return math.perm(max(ACGU[0], ACGU[3]), min(ACGU[0], ACGU[3])) * math.perm(max(ACGU[1], ACGU[2]), min(ACGU[1], ACGU[2]))
